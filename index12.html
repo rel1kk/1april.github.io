@@ -4,10 +4,9 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Subscription Import</title>
+  <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
   <style>
-    * {
-      box-sizing: border-box;
-    }
+    * { box-sizing: border-box; }
 
     body {
       margin: 0;
@@ -16,19 +15,19 @@
       background: linear-gradient(135deg, #0f172a, #1e293b);
       color: white;
       display: flex;
-      align-items: center;
       justify-content: center;
+      align-items: center;
       padding: 20px;
     }
 
     .card {
       width: 100%;
-      max-width: 460px;
+      max-width: 520px;
       background: rgba(255,255,255,0.08);
       border: 1px solid rgba(255,255,255,0.12);
-      backdrop-filter: blur(12px);
       border-radius: 24px;
       padding: 28px;
+      backdrop-filter: blur(14px);
       box-shadow: 0 20px 60px rgba(0,0,0,0.35);
     }
 
@@ -43,25 +42,18 @@
       margin-bottom: 18px;
     }
 
-    label {
-      display: block;
-      margin-bottom: 8px;
-      font-size: 14px;
-      color: rgba(255,255,255,0.85);
-    }
-
     textarea {
       width: 100%;
-      min-height: 110px;
+      min-height: 100px;
       resize: vertical;
+      border-radius: 14px;
       border: 1px solid rgba(255,255,255,0.12);
       background: rgba(255,255,255,0.08);
       color: white;
-      border-radius: 14px;
       padding: 14px;
       font-size: 14px;
+      margin-bottom: 14px;
       outline: none;
-      margin-bottom: 16px;
       word-break: break-all;
     }
 
@@ -71,7 +63,7 @@
       margin-bottom: 12px;
     }
 
-    button {
+    button, a.button-link {
       width: 100%;
       border: none;
       border-radius: 14px;
@@ -79,12 +71,15 @@
       font-size: 15px;
       font-weight: bold;
       cursor: pointer;
-      transition: 0.2s ease;
+      transition: .2s ease;
+      text-decoration: none;
+      display: block;
+      text-align: center;
     }
 
-    button:hover {
+    button:hover, a.button-link:hover {
       transform: translateY(-1px);
-      opacity: 0.97;
+      opacity: .97;
     }
 
     .primary {
@@ -107,18 +102,11 @@
     .status {
       margin-top: 14px;
       font-size: 14px;
-      color: rgba(255,255,255,0.82);
       min-height: 22px;
+      color: rgba(255,255,255,0.82);
     }
 
-    .small {
-      margin-top: 14px;
-      font-size: 12px;
-      color: rgba(255,255,255,0.55);
-      line-height: 1.5;
-    }
-
-    .hint-box {
+    .hint {
       margin-top: 18px;
       padding: 14px;
       border-radius: 14px;
@@ -126,23 +114,53 @@
       border: 1px solid rgba(255,255,255,0.08);
       font-size: 13px;
       color: rgba(255,255,255,0.75);
+      line-height: 1.5;
+    }
+
+    .qr-wrap {
+      display: none;
+      margin-top: 18px;
+      text-align: center;
+    }
+
+    .qr-box {
+      background: white;
+      display: inline-flex;
+      padding: 16px;
+      border-radius: 20px;
+    }
+
+    .small {
+      margin-top: 10px;
+      font-size: 12px;
+      color: rgba(255,255,255,0.65);
+    }
+
+    .device-badge {
+      display: inline-block;
+      margin-bottom: 14px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.08);
+      font-size: 13px;
+      color: rgba(255,255,255,0.85);
     }
   </style>
 </head>
 <body>
   <div class="card">
+    <div class="device-badge" id="deviceBadge">Определяю устройство...</div>
+
     <h1>Subscription Import</h1>
     <p>
-      Нажми кнопку — страница попробует взять ссылку из буфера обмена.  
-      Если не получится, подставит запасную ссылку.
+      Страница открывает подписку в приложении или даёт запасной вариант через копирование / QR.
     </p>
 
-    <label for="subInput">Ссылка подписки</label>
-    <textarea id="subInput">https://clck.ru/3SzBvp</textarea>
+    <textarea id="subInput">https://raw.githubusercontent.com/rel1kk/fluxru/main/vpnn</textarea>
 
     <div class="row">
-      <button class="primary" onclick="pasteFromClipboard()">📋 Вставить из буфера</button>
-      <button class="secondary" onclick="copyCurrentLink()">📎 Скопировать текущую ссылку</button>
+      <button class="secondary" onclick="copyLink()">📋 Скопировать ссылку</button>
+      <button class="secondary" onclick="openRaw()">🌐 Открыть обычную ссылку</button>
     </div>
 
     <div class="row">
@@ -151,35 +169,37 @@
     </div>
 
     <div class="row">
-      <button class="ghost" onclick="openRawLink()">🌐 Открыть обычную ссылку</button>
-      <button class="ghost" onclick="resetFallback()">↺ Вернуть запасную ссылку</button>
+      <button class="ghost" onclick="showManualHelp()">🛠 Если не сработало</button>
     </div>
 
-    <div class="status" id="status"></div>
+    <div class="status" id="status">Готово.</div>
 
-    <div class="hint-box">
-      Если приложение просто открывается и ничего не импортирует — значит клиент не принял deeplink или не любит короткую ссылку.  
-      В таком случае нажми <b>«Скопировать текущую ссылку»</b> и вставь вручную в приложение.
+    <div class="qr-wrap" id="qrWrap">
+      <div class="qr-box">
+        <canvas id="qrcode"></canvas>
+      </div>
+      <div class="small">Открой эту страницу на телефоне или отсканируй QR.</div>
     </div>
 
-    <div class="small">
-      Совет: если можешь, используй не clck.ru, а прямую subscription-ссылку — так шанс импорта намного выше.
+    <div class="hint" id="helpBox" style="display:none;">
+      <b>Если импорт не сработал:</b><br><br>
+      1. Нажми <b>«Скопировать ссылку»</b><br>
+      2. Открой приложение вручную<br>
+      3. Найди <b>Import / Add Subscription / Add from URL</b><br>
+      4. Вставь ссылку вручную
     </div>
   </div>
 
   <script>
-    const fallbackUrl = "https://clck.ru/3SzBvp";
+    const fallbackUrl = "https://raw.githubusercontent.com/rel1kk/fluxru/main/vpnn";
 
     function setStatus(text) {
       document.getElementById("status").textContent = text;
     }
 
-    function getInput() {
-      return document.getElementById("subInput");
-    }
-
-    function normalizeUrl(raw) {
-      return (raw || "").trim();
+    function getInputUrl() {
+      const val = (document.getElementById("subInput").value || "").trim();
+      return val || fallbackUrl;
     }
 
     function isValidUrl(str) {
@@ -191,33 +211,17 @@
       }
     }
 
-    async function pasteFromClipboard() {
-      try {
-        const text = await navigator.clipboard.readText();
-        const clean = normalizeUrl(text);
-
-        if (clean && isValidUrl(clean)) {
-          getInput().value = clean;
-          setStatus("Ссылка вставлена из буфера обмена.");
-        } else if (clean) {
-          getInput().value = clean;
-          setStatus("Из буфера вставлен текст, но это может быть невалидная ссылка.");
-        } else {
-          setStatus("Буфер обмена пуст. Оставлена текущая ссылка.");
-        }
-      } catch (e) {
-        setStatus("Не удалось прочитать буфер обмена. Возможно, браузер запретил доступ.");
-      }
+    function isMobile() {
+      return /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
     }
 
-    async function copyCurrentLink() {
-      const url = normalizeUrl(getInput().value) || fallbackUrl;
+    async function copyLink() {
+      const url = getInputUrl();
 
       try {
         await navigator.clipboard.writeText(url);
         setStatus("Ссылка скопирована.");
       } catch (e) {
-        // старый fallback
         const temp = document.createElement("textarea");
         temp.value = url;
         document.body.appendChild(temp);
@@ -233,112 +237,111 @@
       }
     }
 
-    function getCurrentUrl() {
-      const value = normalizeUrl(getInput().value);
-      if (!value) return fallbackUrl;
-      return value;
-    }
-
-    function resetFallback() {
-      getInput().value = fallbackUrl;
-      setStatus("Запасная ссылка восстановлена.");
-    }
-
-    function openRawLink() {
-      const url = getCurrentUrl();
+    function openRaw() {
+      const url = getInputUrl();
       if (!isValidUrl(url)) {
-        setStatus("Текущая ссылка выглядит некорректной.");
+        setStatus("Ссылка некорректная.");
         return;
       }
       window.open(url, "_blank");
       setStatus("Открыта обычная ссылка.");
     }
 
-    // ===== V2rayTun =====
+    function tryLinks(links, appName) {
+      let i = 0;
+
+      function next() {
+        if (i >= links.length) {
+          setStatus(appName + ": автоимпорт не подтвердился. Используй ручной импорт.");
+          showManualHelp();
+          return;
+        }
+
+        const link = links[i++];
+        window.location.href = link;
+
+        setTimeout(() => {
+          if (document.visibilityState === "visible") {
+            next();
+          } else {
+            setStatus(appName + ": приложение открыто. Если импорт не появился — вставь ссылку вручную.");
+          }
+        }, 1300);
+      }
+
+      next();
+    }
+
     function openV2rayTun() {
-      const url = getCurrentUrl();
+      const url = getInputUrl();
 
       if (!isValidUrl(url)) {
-        setStatus("Ссылка некорректная. Проверь её.");
+        setStatus("Ссылка некорректная.");
         return;
       }
 
       setStatus("Пробую открыть V2rayTun...");
 
-      // Вариант 1 (основной)
-      const deeplink1 = "v2raytun://install-sub?url=" + encodeURIComponent(url);
+      const links = [
+        "v2raytun://install-sub?url=" + encodeURIComponent(url),
+        "v2raytun://import?url=" + encodeURIComponent(url),
+        "v2raytun://add/sub?url=" + encodeURIComponent(url),
+        "v2raytun://subscription/import?url=" + encodeURIComponent(url)
+      ];
 
-      // Вариант 2 (запасной)
-      const deeplink2 = "v2raytun://import?url=" + encodeURIComponent(url);
-
-      // Вариант 3 (ещё один запасной)
-      const deeplink3 = "v2raytun://add/sub?url=" + encodeURIComponent(url);
-
-      tryDeepLinks([deeplink1, deeplink2, deeplink3], "V2rayTun");
+      tryLinks(links, "V2rayTun");
     }
 
-    // ===== HApp =====
     function openHApp() {
-      const url = getCurrentUrl();
+      const url = getInputUrl();
 
       if (!isValidUrl(url)) {
-        setStatus("Ссылка некорректная. Проверь её.");
+        setStatus("Ссылка некорректная.");
         return;
       }
 
       setStatus("Пробую открыть HApp...");
 
-      // Популярные варианты deeplink
-      const deeplink1 = "happ://install-sub?url=" + encodeURIComponent(url);
-      const deeplink2 = "happ://import?url=" + encodeURIComponent(url);
-      const deeplink3 = "happ://add/sub?url=" + encodeURIComponent(url);
+      const links = [
+        "happ://install-sub?url=" + encodeURIComponent(url),
+        "happ://import?url=" + encodeURIComponent(url),
+        "happ://add/sub?url=" + encodeURIComponent(url),
+        "happ://subscription/import?url=" + encodeURIComponent(url),
+        "happ://open?url=" + encodeURIComponent(url)
+      ];
 
-      tryDeepLinks([deeplink1, deeplink2, deeplink3], "HApp");
+      tryLinks(links, "HApp");
     }
 
-    // ===== Универсальный запуск с перебором схем =====
-    function tryDeepLinks(links, appName) {
-      let index = 0;
-
-      function tryNext() {
-        if (index >= links.length) {
-          setStatus(appName + " открылся, но импорт не подтвердился. Попробуй вручную вставить ссылку.");
-          return;
-        }
-
-        const link = links[index];
-        index++;
-
-        window.location.href = link;
-
-        // Даём приложению шанс открыться
-        setTimeout(() => {
-          if (document.visibilityState === "visible") {
-            tryNext();
-          } else {
-            setStatus(appName + " открыт. Если импорт не появился — вставь ссылку вручную.");
-          }
-        }, 1200);
-      }
-
-      tryNext();
+    function showManualHelp() {
+      document.getElementById("helpBox").style.display = "block";
+      setStatus("Показываю ручной способ.");
     }
 
-    // Автозагрузка ссылки из буфера при открытии страницы (если браузер разрешит)
-    window.addEventListener("load", async () => {
-      try {
-        const text = await navigator.clipboard.readText();
-        const clean = normalizeUrl(text);
-        if (clean && isValidUrl(clean)) {
-          getInput().value = clean;
-          setStatus("Автоматически подставлена ссылка из буфера обмена.");
-        } else {
-          setStatus("Готово. Можно открыть в приложении.");
-        }
-      } catch {
-        setStatus("Готово. Можно открыть в приложении.");
+    function initQR() {
+      const currentUrl = window.location.href;
+      QRCode.toCanvas(document.getElementById("qrcode"), currentUrl, {
+        width: 220,
+        margin: 2
+      });
+    }
+
+    function initDeviceMode() {
+      const badge = document.getElementById("deviceBadge");
+      const qrWrap = document.getElementById("qrWrap");
+
+      if (isMobile()) {
+        badge.textContent = "Режим: телефон";
+        qrWrap.style.display = "none";
+      } else {
+        badge.textContent = "Режим: ПК";
+        qrWrap.style.display = "block";
+        initQR();
+        setStatus("На ПК deeplink часто не работает. Открой страницу на телефоне.");
       }
-    });
+    }
+
+    window.addEventListener("load", initDeviceMode);
   </script>
 </body>
 </html>
