@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Smart VLESS Import</title>
+  <title>Subscription Import</title>
   <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
   <style>
     * { box-sizing: border-box; }
@@ -22,7 +22,7 @@
 
     .card {
       width: 100%;
-      max-width: 700px;
+      max-width: 560px;
       background: rgba(255,255,255,0.08);
       border: 1px solid rgba(255,255,255,0.12);
       border-radius: 24px;
@@ -36,21 +36,14 @@
       font-size: 30px;
     }
 
-    h2 {
-      font-size: 18px;
-      margin: 22px 0 10px;
-    }
-
     p {
       color: rgba(255,255,255,0.82);
       line-height: 1.5;
       margin-bottom: 18px;
     }
 
-    textarea {
+    input {
       width: 100%;
-      min-height: 100px;
-      resize: vertical;
       border-radius: 14px;
       border: 1px solid rgba(255,255,255,0.12);
       background: rgba(255,255,255,0.08);
@@ -59,23 +52,6 @@
       font-size: 14px;
       margin-bottom: 14px;
       outline: none;
-      word-break: break-all;
-    }
-
-    .small-box {
-      width: 100%;
-      min-height: 90px;
-      resize: vertical;
-      border-radius: 14px;
-      border: 1px solid rgba(255,255,255,0.12);
-      background: rgba(255,255,255,0.06);
-      color: white;
-      padding: 14px;
-      font-size: 13px;
-      margin-bottom: 14px;
-      outline: none;
-      word-break: break-all;
-      white-space: pre-wrap;
     }
 
     .row {
@@ -86,10 +62,6 @@
 
     .grid-2 {
       grid-template-columns: 1fr 1fr;
-    }
-
-    .grid-3 {
-      grid-template-columns: 1fr 1fr 1fr;
     }
 
     button {
@@ -125,16 +97,11 @@
       border: 1px solid rgba(255,255,255,0.15);
     }
 
-    .status, .meta {
+    .status {
       margin-top: 14px;
       font-size: 14px;
       min-height: 22px;
       color: rgba(255,255,255,0.82);
-    }
-
-    .meta {
-      font-size: 13px;
-      color: rgba(255,255,255,0.7);
     }
 
     .hint {
@@ -177,19 +144,8 @@
       color: rgba(255,255,255,0.65);
     }
 
-    .badge {
-      display: inline-block;
-      padding: 6px 10px;
-      border-radius: 999px;
-      background: rgba(255,255,255,0.08);
-      font-size: 12px;
-      color: rgba(255,255,255,0.85);
-      margin-right: 8px;
-      margin-bottom: 8px;
-    }
-
-    @media (max-width: 700px) {
-      .grid-2, .grid-3 {
+    @media (max-width: 560px) {
+      .grid-2 {
         grid-template-columns: 1fr;
       }
     }
@@ -199,18 +155,17 @@
   <div class="card">
     <div class="device-badge" id="deviceBadge">Определяю устройство...</div>
 
-    <h1>Smart VLESS Import</h1>
+    <h1>Subscription Import</h1>
     <p>
-      Умный импорт для VLESS-подписки: сначала пробует импорт по URL,
-      а если приложение тупит — у тебя уже готов fallback.
+      Единый импорт подписки через URL.  
+      Без fallback VLESS, без лишней магии.
     </p>
 
-    <h2>Ссылка подписки</h2>
-    <textarea id="subInput">https://raw.githubusercontent.com/rel1kk/fluxru/main/vpnn</textarea>
+    <input id="subInput" type="text" readonly />
 
     <div class="row grid-2">
-      <button class="secondary" onclick="loadSubscription()">🔄 Загрузить подписку</button>
       <button class="secondary" onclick="copyLink()">📋 Скопировать ссылку</button>
+      <button class="secondary" onclick="openRaw()">🌐 Открыть подписку</button>
     </div>
 
     <div class="row grid-2">
@@ -223,35 +178,24 @@
       <button class="ghost" onclick="importToApp('shadowrocket')">⚫ Импорт в Shadowrocket</button>
     </div>
 
-    <div class="meta" id="metaInfo">Подписка ещё не загружена.</div>
     <div class="status" id="status">Готово.</div>
-
-    <h2>Первая VLESS-ссылка (fallback)</h2>
-    <div class="small-box" id="firstVlessBox">Пока пусто. Нажми «Загрузить подписку».</div>
-
-    <div class="row grid-3">
-      <button class="secondary" onclick="copyFirstVless()">📎 Скопировать первую VLESS</button>
-      <button class="secondary" onclick="copyAllVless()">📚 Скопировать все VLESS</button>
-      <button class="secondary" onclick="openRaw()">🌐 Открыть ссылку</button>
-    </div>
 
     <div class="qr-wrap" id="qrWrap">
       <div class="qr-box">
         <canvas id="qrcode"></canvas>
       </div>
-      <div class="small">На ПК просто открой эту страницу на телефоне.</div>
+      <div class="small">На ПК открой эту страницу на телефоне.</div>
     </div>
 
-    <div class="hint" id="helpBox">
-      <b>Как это теперь работает:</b><br><br>
-      1. Приложению сначала передаётся <b>сама подписка по URL</b><br>
-      2. Если импорт не сработал — у тебя уже есть <b>готовая VLESS fallback-ссылка</b><br>
-      3. Это намного полезнее, чем просто “открыть приложение и надеяться на чудо”
+    <div class="hint">
+      <b>Важно:</b><br><br>
+      Этот сайт теперь импортирует только <b>URL подписки</b>.<br>
+      Если приложение не поддерживает deeplink — проблема уже в самом приложении, а не в сайте.
     </div>
   </div>
 
   <script>
-    const FALLBACK_URL = "https://raw.githubusercontent.com/rel1kk/fluxru/main/vpnn";
+    const SUB_URL = `${window.location.origin}/sub.txt`;
 
     const APP_SCHEMES = {
       v2raytun: [
@@ -277,29 +221,8 @@
       ]
     };
 
-    let subscriptionText = "";
-    let vlessList = [];
-
     function setStatus(text) {
       document.getElementById("status").textContent = text;
-    }
-
-    function setMeta(text) {
-      document.getElementById("metaInfo").textContent = text;
-    }
-
-    function getUrl() {
-      const value = (document.getElementById("subInput").value || "").trim();
-      return value || FALLBACK_URL;
-    }
-
-    function isValidUrl(str) {
-      try {
-        const u = new URL(str);
-        return u.protocol === "http:" || u.protocol === "https:";
-      } catch {
-        return false;
-      }
     }
 
     function isMobile() {
@@ -308,78 +231,6 @@
 
     function base64EncodeUnicode(str) {
       return btoa(unescape(encodeURIComponent(str)));
-    }
-
-    function decodeBase64IfNeeded(text) {
-      const trimmed = (text || "").trim();
-
-      if (trimmed.includes("vless://")) {
-        return trimmed;
-      }
-
-      try {
-        const decoded = atob(trimmed);
-        if (decoded.includes("vless://")) {
-          return decoded;
-        }
-      } catch (e) {}
-
-      return trimmed;
-    }
-
-    function extractVlessLinks(text) {
-      const decoded = decodeBase64IfNeeded(text);
-
-      return decoded
-        .split(/\r?\n/)
-        .map(line => line.trim())
-        .filter(line => line.startsWith("vless://"));
-    }
-
-    function updateFirstVlessBox() {
-      const box = document.getElementById("firstVlessBox");
-
-      if (vlessList.length > 0) {
-        box.textContent = vlessList[0];
-      } else {
-        box.textContent = "VLESS-ссылки не найдены в подписке.";
-      }
-    }
-
-    async function loadSubscription() {
-      const url = getUrl();
-
-      if (!isValidUrl(url)) {
-        setStatus("Ссылка некорректная.");
-        return;
-      }
-
-      setStatus("Загружаю подписку...");
-      setMeta("Пытаюсь получить содержимое подписки...");
-
-      try {
-        const res = await fetch(url, {
-          method: "GET",
-          cache: "no-store"
-        });
-
-        const text = await res.text();
-        subscriptionText = text;
-        vlessList = extractVlessLinks(text);
-
-        updateFirstVlessBox();
-
-        if (vlessList.length > 0) {
-          setMeta(`Найдено VLESS-ссылок: ${vlessList.length}`);
-          setStatus("Подписка успешно загружена.");
-        } else {
-          setMeta("VLESS-ссылки не найдены. Возможно, это другой формат подписки.");
-          setStatus("Подписка загружена, но VLESS не распознан.");
-        }
-      } catch (e) {
-        setMeta("Не удалось прочитать содержимое подписки.");
-        setStatus("Ошибка загрузки подписки.");
-      }
     }
 
     function buildDeepLinks(appName, rawUrl) {
@@ -399,7 +250,7 @@
 
       function tryNext() {
         if (index >= links.length) {
-          setStatus(appName + ": автоимпорт не подтвердился. Используй fallback ниже.");
+          setStatus(appName + ": приложение не подтвердило импорт.");
           return;
         }
 
@@ -410,7 +261,7 @@
           if (document.visibilityState === "visible") {
             tryNext();
           } else {
-            setStatus(appName + ": приложение открыто. Если импорт не появился — используй fallback VLESS.");
+            setStatus(appName + ": приложение открыто. Если не импортировалось — значит приложение не поддерживает эту схему.");
           }
         }, 1300);
       }
@@ -419,14 +270,7 @@
     }
 
     function importToApp(appName) {
-      const url = getUrl();
-
-      if (!isValidUrl(url)) {
-        setStatus("Ссылка некорректная.");
-        return;
-      }
-
-      const links = buildDeepLinks(appName, url);
+      const links = buildDeepLinks(appName, SUB_URL);
 
       if (!links.length) {
         setStatus("Для этого приложения нет схем импорта.");
@@ -437,56 +281,29 @@
       launchDeepLinks(links, appName);
     }
 
-    async function copyTextSmart(text, successText) {
+    async function copyLink() {
       try {
-        await navigator.clipboard.writeText(text);
-        setStatus(successText);
+        await navigator.clipboard.writeText(SUB_URL);
+        setStatus("Ссылка подписки скопирована.");
       } catch (e) {
-        const temp = document.createElement("textarea");
-        temp.value = text;
+        const temp = document.createElement("input");
+        temp.value = SUB_URL;
         document.body.appendChild(temp);
         temp.select();
         try {
           document.execCommand("copy");
-          setStatus(successText);
+          setStatus("Ссылка подписки скопирована.");
         } catch {
-          prompt("Скопируй вручную:", text);
+          prompt("Скопируй вручную:", SUB_URL);
           setStatus("Не удалось скопировать автоматически.");
         }
         document.body.removeChild(temp);
       }
     }
 
-    async function copyLink() {
-      await copyTextSmart(getUrl(), "Ссылка подписки скопирована.");
-    }
-
-    async function copyFirstVless() {
-      if (!vlessList.length) {
-        setStatus("Сначала загрузи подписку.");
-        return;
-      }
-      await copyTextSmart(vlessList[0], "Первая VLESS-ссылка скопирована.");
-    }
-
-    async function copyAllVless() {
-      if (!vlessList.length) {
-        setStatus("Сначала загрузи подписку.");
-        return;
-      }
-      await copyTextSmart(vlessList.join("\n"), "Все VLESS-ссылки скопированы.");
-    }
-
     function openRaw() {
-      const url = getUrl();
-
-      if (!isValidUrl(url)) {
-        setStatus("Ссылка некорректная.");
-        return;
-      }
-
-      window.open(url, "_blank");
-      setStatus("Открыта обычная ссылка.");
+      window.open(SUB_URL, "_blank");
+      setStatus("Открыта подписка.");
     }
 
     function initQR() {
@@ -508,13 +325,13 @@
         badge.textContent = "Режим: ПК";
         qrWrap.style.display = "block";
         initQR();
-        setStatus("На ПК можно проверить только логику. Импорт тестируй на телефоне.");
+        setStatus("На ПК deeplink не тестируется нормально. Открой страницу на телефоне.");
       }
     }
 
-    window.addEventListener("load", async () => {
+    window.addEventListener("load", () => {
+      document.getElementById("subInput").value = SUB_URL;
       initDeviceMode();
-      await loadSubscription();
     });
   </script>
 </body>
