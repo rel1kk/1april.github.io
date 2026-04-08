@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Subscription Import</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Arial, sans-serif;
+      background: linear-gradient(135deg, #0f172a, #1e293b);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .card {
+      width: 100%;
+      max-width: 460px;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.12);
+      backdrop-filter: blur(12px);
+      border-radius: 24px;
+      padding: 28px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+    }
+
+    h1 {
+      margin: 0 0 10px;
+      font-size: 28px;
+    }
+
+    p {
+      color: rgba(255,255,255,0.8);
+      line-height: 1.5;
+      margin-bottom: 18px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-size: 14px;
+      color: rgba(255,255,255,0.85);
+    }
+
+    textarea {
+      width: 100%;
+      min-height: 110px;
+      resize: vertical;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(255,255,255,0.08);
+      color: white;
+      border-radius: 14px;
+      padding: 14px;
+      font-size: 14px;
+      outline: none;
+      margin-bottom: 16px;
+      word-break: break-all;
+    }
+
+    .row {
+      display: grid;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    button {
+      width: 100%;
+      border: none;
+      border-radius: 14px;
+      padding: 15px 16px;
+      font-size: 15px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: 0.2s ease;
+    }
+
+    button:hover {
+      transform: translateY(-1px);
+      opacity: 0.97;
+    }
+
+    .primary {
+      background: white;
+      color: #111827;
+    }
+
+    .secondary {
+      background: rgba(255,255,255,0.12);
+      color: white;
+      border: 1px solid rgba(255,255,255,0.12);
+    }
+
+    .ghost {
+      background: transparent;
+      color: rgba(255,255,255,0.9);
+      border: 1px solid rgba(255,255,255,0.15);
+    }
+
+    .status {
+      margin-top: 14px;
+      font-size: 14px;
+      color: rgba(255,255,255,0.82);
+      min-height: 22px;
+    }
+
+    .small {
+      margin-top: 14px;
+      font-size: 12px;
+      color: rgba(255,255,255,0.55);
+      line-height: 1.5;
+    }
+
+    .hint-box {
+      margin-top: 18px;
+      padding: 14px;
+      border-radius: 14px;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.08);
+      font-size: 13px;
+      color: rgba(255,255,255,0.75);
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Subscription Import</h1>
+    <p>
+      Нажми кнопку — страница попробует взять ссылку из буфера обмена.  
+      Если не получится, подставит запасную ссылку.
+    </p>
+
+    <label for="subInput">Ссылка подписки</label>
+    <textarea id="subInput">https://clck.ru/3SzBvp</textarea>
+
+    <div class="row">
+      <button class="primary" onclick="pasteFromClipboard()">📋 Вставить из буфера</button>
+      <button class="secondary" onclick="copyCurrentLink()">📎 Скопировать текущую ссылку</button>
+    </div>
+
+    <div class="row">
+      <button class="primary" onclick="openV2rayTun()">🚀 Открыть в V2rayTun</button>
+      <button class="primary" onclick="openHApp()">🟣 Открыть в HApp</button>
+    </div>
+
+    <div class="row">
+      <button class="ghost" onclick="openRawLink()">🌐 Открыть обычную ссылку</button>
+      <button class="ghost" onclick="resetFallback()">↺ Вернуть запасную ссылку</button>
+    </div>
+
+    <div class="status" id="status"></div>
+
+    <div class="hint-box">
+      Если приложение просто открывается и ничего не импортирует — значит клиент не принял deeplink или не любит короткую ссылку.  
+      В таком случае нажми <b>«Скопировать текущую ссылку»</b> и вставь вручную в приложение.
+    </div>
+
+    <div class="small">
+      Совет: если можешь, используй не clck.ru, а прямую subscription-ссылку — так шанс импорта намного выше.
+    </div>
+  </div>
+
+  <script>
+    const fallbackUrl = "https://clck.ru/3SzBvp";
+
+    function setStatus(text) {
+      document.getElementById("status").textContent = text;
+    }
+
+    function getInput() {
+      return document.getElementById("subInput");
+    }
+
+    function normalizeUrl(raw) {
+      return (raw || "").trim();
+    }
+
+    function isValidUrl(str) {
+      try {
+        const u = new URL(str);
+        return u.protocol === "http:" || u.protocol === "https:";
+      } catch {
+        return false;
+      }
+    }
+
+    async function pasteFromClipboard() {
+      try {
+        const text = await navigator.clipboard.readText();
+        const clean = normalizeUrl(text);
+
+        if (clean && isValidUrl(clean)) {
+          getInput().value = clean;
+          setStatus("Ссылка вставлена из буфера обмена.");
+        } else if (clean) {
+          getInput().value = clean;
+          setStatus("Из буфера вставлен текст, но это может быть невалидная ссылка.");
+        } else {
+          setStatus("Буфер обмена пуст. Оставлена текущая ссылка.");
+        }
+      } catch (e) {
+        setStatus("Не удалось прочитать буфер обмена. Возможно, браузер запретил доступ.");
+      }
+    }
+
+    async function copyCurrentLink() {
+      const url = normalizeUrl(getInput().value) || fallbackUrl;
+
+      try {
+        await navigator.clipboard.writeText(url);
+        setStatus("Ссылка скопирована.");
+      } catch (e) {
+        // старый fallback
+        const temp = document.createElement("textarea");
+        temp.value = url;
+        document.body.appendChild(temp);
+        temp.select();
+        try {
+          document.execCommand("copy");
+          setStatus("Ссылка скопирована.");
+        } catch {
+          prompt("Скопируй ссылку вручную:", url);
+          setStatus("Не удалось скопировать автоматически.");
+        }
+        document.body.removeChild(temp);
+      }
+    }
+
+    function getCurrentUrl() {
+      const value = normalizeUrl(getInput().value);
+      if (!value) return fallbackUrl;
+      return value;
+    }
+
+    function resetFallback() {
+      getInput().value = fallbackUrl;
+      setStatus("Запасная ссылка восстановлена.");
+    }
+
+    function openRawLink() {
+      const url = getCurrentUrl();
+      if (!isValidUrl(url)) {
+        setStatus("Текущая ссылка выглядит некорректной.");
+        return;
+      }
+      window.open(url, "_blank");
+      setStatus("Открыта обычная ссылка.");
+    }
+
+    // ===== V2rayTun =====
+    function openV2rayTun() {
+      const url = getCurrentUrl();
+
+      if (!isValidUrl(url)) {
+        setStatus("Ссылка некорректная. Проверь её.");
+        return;
+      }
+
+      setStatus("Пробую открыть V2rayTun...");
+
+      // Вариант 1 (основной)
+      const deeplink1 = "v2raytun://install-sub?url=" + encodeURIComponent(url);
+
+      // Вариант 2 (запасной)
+      const deeplink2 = "v2raytun://import?url=" + encodeURIComponent(url);
+
+      // Вариант 3 (ещё один запасной)
+      const deeplink3 = "v2raytun://add/sub?url=" + encodeURIComponent(url);
+
+      tryDeepLinks([deeplink1, deeplink2, deeplink3], "V2rayTun");
+    }
+
+    // ===== HApp =====
+    function openHApp() {
+      const url = getCurrentUrl();
+
+      if (!isValidUrl(url)) {
+        setStatus("Ссылка некорректная. Проверь её.");
+        return;
+      }
+
+      setStatus("Пробую открыть HApp...");
+
+      // Популярные варианты deeplink
+      const deeplink1 = "happ://install-sub?url=" + encodeURIComponent(url);
+      const deeplink2 = "happ://import?url=" + encodeURIComponent(url);
+      const deeplink3 = "happ://add/sub?url=" + encodeURIComponent(url);
+
+      tryDeepLinks([deeplink1, deeplink2, deeplink3], "HApp");
+    }
+
+    // ===== Универсальный запуск с перебором схем =====
+    function tryDeepLinks(links, appName) {
+      let index = 0;
+
+      function tryNext() {
+        if (index >= links.length) {
+          setStatus(appName + " открылся, но импорт не подтвердился. Попробуй вручную вставить ссылку.");
+          return;
+        }
+
+        const link = links[index];
+        index++;
+
+        window.location.href = link;
+
+        // Даём приложению шанс открыться
+        setTimeout(() => {
+          if (document.visibilityState === "visible") {
+            tryNext();
+          } else {
+            setStatus(appName + " открыт. Если импорт не появился — вставь ссылку вручную.");
+          }
+        }, 1200);
+      }
+
+      tryNext();
+    }
+
+    // Автозагрузка ссылки из буфера при открытии страницы (если браузер разрешит)
+    window.addEventListener("load", async () => {
+      try {
+        const text = await navigator.clipboard.readText();
+        const clean = normalizeUrl(text);
+        if (clean && isValidUrl(clean)) {
+          getInput().value = clean;
+          setStatus("Автоматически подставлена ссылка из буфера обмена.");
+        } else {
+          setStatus("Готово. Можно открыть в приложении.");
+        }
+      } catch {
+        setStatus("Готово. Можно открыть в приложении.");
+      }
+    });
+  </script>
+</body>
+</html>
