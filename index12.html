@@ -2,11 +2,15 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Subscription Import</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>VPN Import</title>
+  <meta name="theme-color" content="#0f172a" />
   <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
   <style>
-    * { box-sizing: border-box; }
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
 
     body {
       margin: 0;
@@ -17,29 +21,30 @@
       display: flex;
       justify-content: center;
       align-items: center;
-      padding: 20px;
+      padding: 18px;
     }
 
     .card {
       width: 100%;
-      max-width: 560px;
+      max-width: 580px;
       background: rgba(255,255,255,0.08);
       border: 1px solid rgba(255,255,255,0.12);
       border-radius: 24px;
-      padding: 28px;
+      padding: 24px;
       backdrop-filter: blur(14px);
       box-shadow: 0 20px 60px rgba(0,0,0,0.35);
     }
 
     h1 {
       margin: 0 0 10px;
-      font-size: 30px;
+      font-size: 28px;
     }
 
     p {
       color: rgba(255,255,255,0.82);
       line-height: 1.5;
       margin-bottom: 18px;
+      font-size: 14px;
     }
 
     input {
@@ -49,7 +54,7 @@
       background: rgba(255,255,255,0.08);
       color: white;
       padding: 14px;
-      font-size: 14px;
+      font-size: 13px;
       margin-bottom: 14px;
       outline: none;
     }
@@ -72,12 +77,12 @@
       font-size: 15px;
       font-weight: bold;
       cursor: pointer;
-      transition: .2s ease;
+      transition: .18s ease;
+      touch-action: manipulation;
     }
 
-    button:hover {
-      transform: translateY(-1px);
-      opacity: .97;
+    button:active {
+      transform: scale(0.98);
     }
 
     .primary {
@@ -93,26 +98,16 @@
 
     .ghost {
       background: transparent;
-      color: rgba(255,255,255,0.9);
+      color: rgba(255,255,255,0.92);
       border: 1px solid rgba(255,255,255,0.15);
     }
 
     .status {
       margin-top: 14px;
       font-size: 14px;
-      min-height: 22px;
-      color: rgba(255,255,255,0.82);
-    }
-
-    .hint {
-      margin-top: 18px;
-      padding: 14px;
-      border-radius: 14px;
-      background: rgba(255,255,255,0.06);
-      border: 1px solid rgba(255,255,255,0.08);
-      font-size: 13px;
-      color: rgba(255,255,255,0.75);
-      line-height: 1.5;
+      min-height: 24px;
+      color: rgba(255,255,255,0.9);
+      word-break: break-word;
     }
 
     .device-badge {
@@ -144,6 +139,17 @@
       color: rgba(255,255,255,0.65);
     }
 
+    .hint {
+      margin-top: 18px;
+      padding: 14px;
+      border-radius: 14px;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.08);
+      font-size: 13px;
+      color: rgba(255,255,255,0.78);
+      line-height: 1.5;
+    }
+
     @media (max-width: 560px) {
       .grid-2 {
         grid-template-columns: 1fr;
@@ -155,27 +161,26 @@
   <div class="card">
     <div class="device-badge" id="deviceBadge">Определяю устройство...</div>
 
-    <h1>Subscription Import</h1>
+    <h1>VPN Import</h1>
     <p>
-      Единый импорт подписки через URL.  
-      Без fallback VLESS, без лишней магии.
+      Импорт напрямую с RAW-ссылки. Без sub.txt, без fallback VLESS, без лишнего мусора.
     </p>
 
     <input id="subInput" type="text" readonly />
 
     <div class="row grid-2">
-      <button class="secondary" onclick="copyLink()">📋 Скопировать ссылку</button>
-      <button class="secondary" onclick="openRaw()">🌐 Открыть подписку</button>
+      <button class="secondary" id="copyBtn">📋 Скопировать ссылку</button>
+      <button class="secondary" id="openBtn">🌐 Открыть RAW</button>
     </div>
 
     <div class="row grid-2">
-      <button class="primary" onclick="importToApp('v2raytun')">🚀 Импорт в V2rayTun</button>
-      <button class="primary" onclick="importToApp('happ')">🟣 Импорт в HApp</button>
+      <button class="primary" id="v2Btn">🚀 Импорт в V2rayTun</button>
+      <button class="primary" id="happBtn">🟣 Импорт в HApp</button>
     </div>
 
     <div class="row grid-2">
-      <button class="ghost" onclick="importToApp('clash')">🟦 Импорт в Clash</button>
-      <button class="ghost" onclick="importToApp('shadowrocket')">⚫ Импорт в Shadowrocket</button>
+      <button class="ghost" id="clashBtn">🟦 Импорт в Clash</button>
+      <button class="ghost" id="shadowBtn">⚫ Импорт в Shadowrocket</button>
     </div>
 
     <div class="status" id="status">Готово.</div>
@@ -184,25 +189,27 @@
       <div class="qr-box">
         <canvas id="qrcode"></canvas>
       </div>
-      <div class="small">На ПК открой эту страницу на телефоне.</div>
+      <div class="small">На ПК открой страницу на телефоне.</div>
     </div>
 
     <div class="hint">
-      <b>Важно:</b><br><br>
-      Этот сайт теперь импортирует только <b>URL подписки</b>.<br>
-      Если приложение не поддерживает deeplink — проблема уже в самом приложении, а не в сайте.
+      <b>Как это работает:</b><br><br>
+      1. Кнопка сначала копирует RAW-ссылку в буфер<br>
+      2. Потом пытается открыть приложение через несколько схем<br>
+      3. Если приложение тупое — ссылка уже в буфере, вставляешь вручную
     </div>
   </div>
 
   <script>
-    const SUB_URL = `${window.location.origin}/sub.txt`;
+    const SUB_URL = "https://raw.githubusercontent.com/rel1kk/fluxru/refs/heads/main/vpnn";
 
     const APP_SCHEMES = {
       v2raytun: [
         "v2raytun://install-sub?url={url}",
         "v2raytun://import?url={url}",
         "v2raytun://add/sub?url={url}",
-        "v2raytun://subscription/import?url={url}"
+        "v2raytun://subscription/import?url={url}",
+        "v2raytun://open?url={url}"
       ],
       happ: [
         "happ://install-sub?url={url}",
@@ -213,16 +220,21 @@
       ],
       clash: [
         "clash://install-config?url={url}",
-        "clash://import-remote-profile?url={url}"
+        "clash://import-remote-profile?url={url}",
+        "clash://install?url={url}"
       ],
       shadowrocket: [
         "shadowrocket://add/sub://{base64}",
-        "shadowrocket://install?url={url}"
+        "shadowrocket://install?url={url}",
+        "shadowrocket://add/{url}"
       ]
     };
 
+    const statusEl = document.getElementById("status");
+    const subInput = document.getElementById("subInput");
+
     function setStatus(text) {
-      document.getElementById("status").textContent = text;
+      statusEl.textContent = text;
     }
 
     function isMobile() {
@@ -233,11 +245,30 @@
       return btoa(unescape(encodeURIComponent(str)));
     }
 
+    async function copyText(text) {
+      try {
+        await navigator.clipboard.writeText(text);
+        return true;
+      } catch (e) {
+        try {
+          const temp = document.createElement("input");
+          temp.value = text;
+          document.body.appendChild(temp);
+          temp.select();
+          const ok = document.execCommand("copy");
+          document.body.removeChild(temp);
+          return ok;
+        } catch {
+          return false;
+        }
+      }
+    }
+
     function buildDeepLinks(appName, rawUrl) {
       const encodedUrl = encodeURIComponent(rawUrl);
       const encodedBase64 = base64EncodeUnicode(rawUrl);
-
       const templates = APP_SCHEMES[appName] || [];
+
       return templates.map(tpl =>
         tpl
           .replaceAll("{url}", encodedUrl)
@@ -245,70 +276,84 @@
       );
     }
 
-    function launchDeepLinks(links, appName) {
-      let index = 0;
+    async function hardLaunch(appName) {
+      const links = buildDeepLinks(appName, SUB_URL);
+
+      if (!links.length) {
+        setStatus("Нет схем для " + appName);
+        return;
+      }
+
+      await copyText(SUB_URL);
+      setStatus("Пробую открыть " + appName + "...");
+
+      let i = 0;
+      let appOpened = false;
+
+      const onVisibility = () => {
+        if (document.hidden) appOpened = true;
+      };
+
+      document.addEventListener("visibilitychange", onVisibility);
 
       function tryNext() {
-        if (index >= links.length) {
-          setStatus(appName + ": приложение не подтвердило импорт.");
+        if (i >= links.length) {
+          document.removeEventListener("visibilitychange", onVisibility);
+
+          if (appOpened) {
+            setStatus(appName + ": приложение открылось. Ссылка уже в буфере.");
+          } else {
+            setStatus(appName + ": не открылось. Ссылка скопирована — вставь вручную.");
+          }
           return;
         }
 
-        const link = links[index++];
-        window.location.href = link;
+        const link = links[i++];
+
+        // iframe-способ
+        const iframe = document.createElement("iframe");
+        iframe.style.display = "none";
+        iframe.src = link;
+        document.body.appendChild(iframe);
+
+        // прямой переход
+        setTimeout(() => {
+          try {
+            window.location.href = link;
+          } catch {}
+        }, 120);
 
         setTimeout(() => {
-          if (document.visibilityState === "visible") {
+          try { iframe.remove(); } catch {}
+          if (!appOpened && document.visibilityState === "visible") {
             tryNext();
           } else {
-            setStatus(appName + ": приложение открыто. Если не импортировалось — значит приложение не поддерживает эту схему.");
+            document.removeEventListener("visibilitychange", onVisibility);
+            setStatus(appName + ": приложение открыто. Ссылка уже в буфере.");
           }
-        }, 1300);
+        }, 1100);
       }
 
       tryNext();
     }
 
-    function importToApp(appName) {
-      const links = buildDeepLinks(appName, SUB_URL);
-
-      if (!links.length) {
-        setStatus("Для этого приложения нет схем импорта.");
-        return;
-      }
-
-      setStatus("Пробую импорт в " + appName + "...");
-      launchDeepLinks(links, appName);
+    async function openRaw() {
+      setStatus("Открываю RAW...");
+      window.open(SUB_URL, "_blank");
     }
 
     async function copyLink() {
-      try {
-        await navigator.clipboard.writeText(SUB_URL);
-        setStatus("Ссылка подписки скопирована.");
-      } catch (e) {
-        const temp = document.createElement("input");
-        temp.value = SUB_URL;
-        document.body.appendChild(temp);
-        temp.select();
-        try {
-          document.execCommand("copy");
-          setStatus("Ссылка подписки скопирована.");
-        } catch {
-          prompt("Скопируй вручную:", SUB_URL);
-          setStatus("Не удалось скопировать автоматически.");
-        }
-        document.body.removeChild(temp);
+      const ok = await copyText(SUB_URL);
+      if (ok) {
+        setStatus("RAW-ссылка скопирована.");
+      } else {
+        prompt("Скопируй вручную:", SUB_URL);
+        setStatus("Автокопирование не сработало.");
       }
     }
 
-    function openRaw() {
-      window.open(SUB_URL, "_blank");
-      setStatus("Открыта подписка.");
-    }
-
     function initQR() {
-      const currentUrl = window.location.href;
-      QRCode.toCanvas(document.getElementById("qrcode"), currentUrl, {
+      QRCode.toCanvas(document.getElementById("qrcode"), window.location.href, {
         width: 220,
         margin: 2
       });
@@ -325,13 +370,40 @@
         badge.textContent = "Режим: ПК";
         qrWrap.style.display = "block";
         initQR();
-        setStatus("На ПК deeplink не тестируется нормально. Открой страницу на телефоне.");
+        setStatus("На ПК импорт в приложение нормально не тестится. Открой на телефоне.");
       }
     }
 
+    function bindFastTap(id, handler) {
+      const el = document.getElementById(id);
+      let locked = false;
+
+      const run = async (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (locked) return;
+        locked = true;
+        try {
+          await handler();
+        } finally {
+          setTimeout(() => { locked = false; }, 900);
+        }
+      };
+
+      el.addEventListener("click", run, { passive: false });
+      el.addEventListener("touchend", run, { passive: false });
+    }
+
     window.addEventListener("load", () => {
-      document.getElementById("subInput").value = SUB_URL;
+      subInput.value = SUB_URL;
       initDeviceMode();
+
+      bindFastTap("copyBtn", copyLink);
+      bindFastTap("openBtn", openRaw);
+      bindFastTap("v2Btn", () => hardLaunch("v2raytun"));
+      bindFastTap("happBtn", () => hardLaunch("happ"));
+      bindFastTap("clashBtn", () => hardLaunch("clash"));
+      bindFastTap("shadowBtn", () => hardLaunch("shadowrocket"));
     });
   </script>
 </body>
