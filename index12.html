@@ -12,12 +12,16 @@
       -webkit-tap-highlight-color: transparent;
     }
 
-    body {
+    html, body {
       margin: 0;
-      min-height: 100vh;
+      padding: 0;
+      min-height: 100%;
       font-family: Arial, sans-serif;
       background: linear-gradient(135deg, #0f172a, #1e293b);
       color: white;
+    }
+
+    body {
       display: flex;
       justify-content: center;
       align-items: center;
@@ -38,6 +42,7 @@
     h1 {
       margin: 0 0 10px;
       font-size: 28px;
+      line-height: 1.2;
     }
 
     p {
@@ -57,6 +62,7 @@
       font-size: 13px;
       margin-bottom: 14px;
       outline: none;
+      user-select: all;
     }
 
     .row {
@@ -105,9 +111,14 @@
     .status {
       margin-top: 14px;
       font-size: 14px;
-      min-height: 24px;
-      color: rgba(255,255,255,0.9);
+      min-height: 44px;
+      color: rgba(255,255,255,0.95);
       word-break: break-word;
+      white-space: pre-line;
+      padding: 12px 14px;
+      border-radius: 14px;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.08);
     }
 
     .device-badge {
@@ -147,12 +158,22 @@
       border: 1px solid rgba(255,255,255,0.08);
       font-size: 13px;
       color: rgba(255,255,255,0.78);
-      line-height: 1.5;
+      line-height: 1.55;
+    }
+
+    .tiny {
+      margin-top: 10px;
+      font-size: 12px;
+      opacity: .75;
     }
 
     @media (max-width: 560px) {
       .grid-2 {
         grid-template-columns: 1fr;
+      }
+
+      .card {
+        padding: 20px;
       }
     }
   </style>
@@ -163,7 +184,7 @@
 
     <h1>VPN Import</h1>
     <p>
-      Импорт напрямую с RAW-ссылки. Без sub.txt, без fallback VLESS, без лишнего мусора.
+      Импорт напрямую с RAW-ссылки. Без <b>sub.txt</b>, без fallback VLESS, без лишней возни.
     </p>
 
     <input id="subInput" type="text" readonly />
@@ -189,20 +210,26 @@
       <div class="qr-box">
         <canvas id="qrcode"></canvas>
       </div>
-      <div class="small">На ПК открой страницу на телефоне.</div>
+      <div class="small">Открой эту страницу на телефоне для нормального теста.</div>
     </div>
 
     <div class="hint">
-      <b>Как это работает:</b><br><br>
-      1. Кнопка сначала копирует RAW-ссылку в буфер<br>
-      2. Потом пытается открыть приложение через несколько схем<br>
-      3. Если приложение тупое — ссылка уже в буфере, вставляешь вручную
+      <b>Как пользоваться:</b><br><br>
+      1. Жмёшь кнопку нужного приложения<br>
+      2. Сайт сначала копирует ссылку в буфер<br>
+      3. Потом пытается открыть приложение<br>
+      4. Если приложение орёт <b>«Ошибка»</b> — внутри него открой <b>Добавить подписку</b> и просто вставь ссылку
+      <div class="tiny">
+        Это ограничение самих приложений, а не кнопки сайта.
+      </div>
     </div>
   </div>
 
   <script>
-    const SUB_URL = "https://raw.githubusercontent.com/rel1kk/fluxru/refs/heads/main/vpnn";
+    // ======== ТВОЯ RAW-СЫЛКА ========
+    const SUB_URL = "https://raw.githubusercontent.com/rel1kk/fluxru/main/vpnn";
 
+    // ======== СХЕМЫ ПРИЛОЖЕНИЙ ========
     const APP_SCHEMES = {
       v2raytun: [
         "v2raytun://install-sub?url={url}",
@@ -242,7 +269,11 @@
     }
 
     function base64EncodeUnicode(str) {
-      return btoa(unescape(encodeURIComponent(str)));
+      try {
+        return btoa(unescape(encodeURIComponent(str)));
+      } catch {
+        return btoa(str);
+      }
     }
 
     async function copyText(text) {
@@ -255,6 +286,7 @@
           temp.value = text;
           document.body.appendChild(temp);
           temp.select();
+          temp.setSelectionRange(0, 99999);
           const ok = document.execCommand("copy");
           document.body.removeChild(temp);
           return ok;
@@ -276,6 +308,27 @@
       );
     }
 
+    function launchByIframe(link) {
+      const iframe = document.createElement("iframe");
+      iframe.style.display = "none";
+      iframe.src = link;
+      document.body.appendChild(iframe);
+      setTimeout(() => {
+        try { iframe.remove(); } catch {}
+      }, 1500);
+    }
+
+    function launchByAnchor(link) {
+      const a = document.createElement("a");
+      a.href = link;
+      a.style.display = "none";
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(() => {
+        try { a.remove(); } catch {}
+      }, 500);
+    }
+
     async function hardLaunch(appName) {
       const links = buildDeepLinks(appName, SUB_URL);
 
@@ -285,60 +338,87 @@
       }
 
       await copyText(SUB_URL);
-      setStatus("Пробую открыть " + appName + "...");
+
+      setStatus(
+        "Пробую открыть " + appName + "...\n" +
+        "Ссылка уже скопирована в буфер."
+      );
 
       let i = 0;
       let appOpened = false;
+      let finished = false;
 
       const onVisibility = () => {
-        if (document.hidden) appOpened = true;
+        if (document.hidden) {
+          appOpened = true;
+        }
       };
 
       document.addEventListener("visibilitychange", onVisibility);
 
-      function tryNext() {
-        if (i >= links.length) {
-          document.removeEventListener("visibilitychange", onVisibility);
+      function finish(msg) {
+        if (finished) return;
+        finished = true;
+        document.removeEventListener("visibilitychange", onVisibility);
+        setStatus(msg);
+      }
 
+      function tryNext() {
+        if (finished) return;
+
+        if (i >= links.length) {
           if (appOpened) {
-            setStatus(appName + ": приложение открылось. Ссылка уже в буфере.");
+            finish(
+              appName + ": приложение открылось.\n" +
+              "Если там пишет «Ошибка» — открой внутри него «Добавить подписку» и вставь ссылку из буфера."
+            );
           } else {
-            setStatus(appName + ": не открылось. Ссылка скопирована — вставь вручную.");
+            finish(
+              appName + ": приложение не открылось.\n" +
+              "Ссылка уже скопирована — вставь её вручную."
+            );
           }
           return;
         }
 
         const link = links[i++];
 
-        // iframe-способ
-        const iframe = document.createElement("iframe");
-        iframe.style.display = "none";
-        iframe.src = link;
-        document.body.appendChild(iframe);
+        // 1) iframe-метод
+        try {
+          launchByIframe(link);
+        } catch {}
 
-        // прямой переход
+        // 2) anchor click
+        setTimeout(() => {
+          try {
+            launchByAnchor(link);
+          } catch {}
+        }, 120);
+
+        // 3) прямой переход
         setTimeout(() => {
           try {
             window.location.href = link;
           } catch {}
-        }, 120);
+        }, 240);
 
         setTimeout(() => {
-          try { iframe.remove(); } catch {}
-          if (!appOpened && document.visibilityState === "visible") {
+          if (document.visibilityState === "visible" && !appOpened) {
             tryNext();
           } else {
-            document.removeEventListener("visibilitychange", onVisibility);
-            setStatus(appName + ": приложение открыто. Ссылка уже в буфере.");
+            finish(
+              appName + ": приложение открыто.\n" +
+              "Если импорт не прошёл — ссылка уже в буфере, просто вставь её в самом приложении."
+            );
           }
-        }, 1100);
+        }, 1200);
       }
 
       tryNext();
     }
 
     async function openRaw() {
-      setStatus("Открываю RAW...");
+      setStatus("Открываю RAW-ссылку...");
       window.open(SUB_URL, "_blank");
     }
 
@@ -353,6 +433,7 @@
     }
 
     function initQR() {
+      if (typeof QRCode === "undefined") return;
       QRCode.toCanvas(document.getElementById("qrcode"), window.location.href, {
         width: 220,
         margin: 2
@@ -370,7 +451,7 @@
         badge.textContent = "Режим: ПК";
         qrWrap.style.display = "block";
         initQR();
-        setStatus("На ПК импорт в приложение нормально не тестится. Открой на телефоне.");
+        setStatus("На ПК deeplink почти бесполезен. Открой эту страницу на телефоне.");
       }
     }
 
