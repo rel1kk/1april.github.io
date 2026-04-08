@@ -6,22 +6,16 @@
   <title>VPN Import</title>
   <meta name="theme-color" content="#0f172a" />
   <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
-  <style>
-    * {
-      box-sizing: border-box;
-      -webkit-tap-highlight-color: transparent;
-    }
 
-    html, body {
+  <style>
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+    body {
       margin: 0;
-      padding: 0;
-      min-height: 100%;
+      min-height: 100vh;
       font-family: Arial, sans-serif;
       background: linear-gradient(135deg, #0f172a, #1e293b);
       color: white;
-    }
-
-    body {
       display: flex;
       justify-content: center;
       align-items: center;
@@ -39,18 +33,8 @@
       box-shadow: 0 20px 60px rgba(0,0,0,0.35);
     }
 
-    h1 {
-      margin: 0 0 10px;
-      font-size: 28px;
-      line-height: 1.2;
-    }
-
-    p {
-      color: rgba(255,255,255,0.82);
-      line-height: 1.5;
-      margin-bottom: 18px;
-      font-size: 14px;
-    }
+    h1 { margin: 0 0 10px; font-size: 28px; }
+    p { color: rgba(255,255,255,0.82); font-size: 14px; }
 
     input {
       width: 100%;
@@ -59,433 +43,132 @@
       background: rgba(255,255,255,0.08);
       color: white;
       padding: 14px;
-      font-size: 13px;
       margin-bottom: 14px;
-      outline: none;
-      user-select: all;
     }
 
-    .row {
-      display: grid;
-      gap: 12px;
-      margin-bottom: 12px;
-    }
-
-    .grid-2 {
-      grid-template-columns: 1fr 1fr;
-    }
+    .row { display: grid; gap: 12px; margin-bottom: 12px; }
+    .grid-2 { grid-template-columns: 1fr 1fr; }
 
     button {
-      width: 100%;
       border: none;
       border-radius: 14px;
-      padding: 15px 16px;
-      font-size: 15px;
+      padding: 14px;
       font-weight: bold;
       cursor: pointer;
-      transition: .18s ease;
       touch-action: manipulation;
     }
 
-    button:active {
-      transform: scale(0.98);
-    }
-
-    .primary {
-      background: white;
-      color: #111827;
-    }
-
-    .secondary {
-      background: rgba(255,255,255,0.12);
-      color: white;
-      border: 1px solid rgba(255,255,255,0.12);
-    }
-
-    .ghost {
-      background: transparent;
-      color: rgba(255,255,255,0.92);
-      border: 1px solid rgba(255,255,255,0.15);
-    }
+    .primary { background: white; color: black; }
+    .secondary { background: rgba(255,255,255,0.12); color: white; }
+    .ghost { background: transparent; color: white; border: 1px solid rgba(255,255,255,0.2); }
 
     .status {
-      margin-top: 14px;
+      margin-top: 12px;
       font-size: 14px;
-      min-height: 44px;
-      color: rgba(255,255,255,0.95);
-      word-break: break-word;
-      white-space: pre-line;
-      padding: 12px 14px;
-      border-radius: 14px;
+      min-height: 40px;
+      padding: 10px;
       background: rgba(255,255,255,0.06);
-      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 10px;
     }
 
-    .device-badge {
-      display: inline-block;
-      margin-bottom: 14px;
-      padding: 8px 12px;
-      border-radius: 999px;
-      background: rgba(255,255,255,0.08);
-      font-size: 13px;
-      color: rgba(255,255,255,0.85);
-    }
+    .qr-wrap { display: none; text-align: center; margin-top: 15px; }
 
-    .qr-wrap {
-      display: none;
-      margin-top: 18px;
-      text-align: center;
-    }
-
-    .qr-box {
-      background: white;
-      display: inline-flex;
-      padding: 16px;
-      border-radius: 20px;
-    }
-
-    .small {
-      margin-top: 10px;
-      font-size: 12px;
-      color: rgba(255,255,255,0.65);
-    }
-
-    .hint {
-      margin-top: 18px;
-      padding: 14px;
-      border-radius: 14px;
-      background: rgba(255,255,255,0.06);
-      border: 1px solid rgba(255,255,255,0.08);
-      font-size: 13px;
-      color: rgba(255,255,255,0.78);
-      line-height: 1.55;
-    }
-
-    .tiny {
-      margin-top: 10px;
-      font-size: 12px;
-      opacity: .75;
-    }
-
-    @media (max-width: 560px) {
-      .grid-2 {
-        grid-template-columns: 1fr;
-      }
-
-      .card {
-        padding: 20px;
-      }
+    @media(max-width:560px){
+      .grid-2{grid-template-columns:1fr;}
     }
   </style>
 </head>
+
 <body>
   <div class="card">
-    <div class="device-badge" id="deviceBadge">Определяю устройство...</div>
-
     <h1>VPN Import</h1>
-    <p>
-      Импорт напрямую с RAW-ссылки. Без <b>sub.txt</b>, без fallback VLESS, без лишней возни.
-    </p>
+    <p>Импорт через RAW без sub.txt</p>
 
-    <input id="subInput" type="text" readonly />
+    <input id="subInput" readonly />
 
     <div class="row grid-2">
-      <button class="secondary" id="copyBtn">📋 Скопировать ссылку</button>
-      <button class="secondary" id="openBtn">🌐 Открыть RAW</button>
+      <button class="secondary" id="copyBtn">📋 Скопировать</button>
+      <button class="secondary" id="openBtn">🌐 Открыть</button>
     </div>
 
     <div class="row grid-2">
-      <button class="primary" id="v2Btn">🚀 Импорт в V2rayTun</button>
-      <button class="primary" id="happBtn">🟣 Импорт в HApp</button>
+      <button class="primary" id="v2Btn">V2rayTun</button>
+      <button class="primary" id="happBtn">HApp</button>
     </div>
 
     <div class="row grid-2">
-      <button class="ghost" id="clashBtn">🟦 Импорт в Clash</button>
-      <button class="ghost" id="shadowBtn">⚫ Импорт в Shadowrocket</button>
+      <button class="ghost" id="clashBtn">Clash</button>
+      <button class="ghost" id="shadowBtn">Shadowrocket</button>
     </div>
 
-    <div class="status" id="status">Готово.</div>
+    <div class="status" id="status">Готово</div>
 
     <div class="qr-wrap" id="qrWrap">
-      <div class="qr-box">
-        <canvas id="qrcode"></canvas>
-      </div>
-      <div class="small">Открой эту страницу на телефоне для нормального теста.</div>
-    </div>
-
-    <div class="hint">
-      <b>Как пользоваться:</b><br><br>
-      1. Жмёшь кнопку нужного приложения<br>
-      2. Сайт сначала копирует ссылку в буфер<br>
-      3. Потом пытается открыть приложение<br>
-      4. Если приложение орёт <b>«Ошибка»</b> — внутри него открой <b>Добавить подписку</b> и просто вставь ссылку
-      <div class="tiny">
-        Это ограничение самих приложений, а не кнопки сайта.
-      </div>
+      <canvas id="qrcode"></canvas>
     </div>
   </div>
 
-  <script>
-    // ======== ТВОЯ RAW-СЫЛКА ========
-    const SUB_URL = "https://raw.githubusercontent.com/rel1kk/fluxru/main/vpnn";
+<script>
+const SUB_URL = "https://raw.githubusercontent.com/rel1kk/fluxru/main/vpn";
 
-    // ======== СХЕМЫ ПРИЛОЖЕНИЙ ========
-    const APP_SCHEMES = {
-      v2raytun: [
-        "v2raytun://install-sub?url={url}",
-        "v2raytun://import?url={url}",
-        "v2raytun://add/sub?url={url}",
-        "v2raytun://subscription/import?url={url}",
-        "v2raytun://open?url={url}"
-      ],
-      happ: [
-        "happ://install-sub?url={url}",
-        "happ://import?url={url}",
-        "happ://add/sub?url={url}",
-        "happ://subscription/import?url={url}",
-        "happ://open?url={url}"
-      ],
-      clash: [
-        "clash://install-config?url={url}",
-        "clash://import-remote-profile?url={url}",
-        "clash://install?url={url}"
-      ],
-      shadowrocket: [
-        "shadowrocket://add/sub://{base64}",
-        "shadowrocket://install?url={url}",
-        "shadowrocket://add/{url}"
-      ]
-    };
+const APPS = {
+  v2raytun: ["v2raytun://install-sub?url={url}","v2raytun://import?url={url}"],
+  happ: ["happ://install-sub?url={url}","happ://import?url={url}"],
+  clash: ["clash://install-config?url={url}"],
+  shadowrocket: ["shadowrocket://install?url={url}"]
+};
 
-    const statusEl = document.getElementById("status");
-    const subInput = document.getElementById("subInput");
+const statusEl = document.getElementById("status");
 
-    function setStatus(text) {
-      statusEl.textContent = text;
+function setStatus(t){statusEl.textContent=t;}
+
+async function copy(){
+  try{
+    await navigator.clipboard.writeText(SUB_URL);
+    setStatus("Скопировано");
+  }catch{
+    prompt("Копируй:",SUB_URL);
+  }
+}
+
+function openRaw(){
+  window.open(SUB_URL,"_blank");
+}
+
+function build(app){
+  const enc=encodeURIComponent(SUB_URL);
+  return APPS[app].map(x=>x.replace("{url}",enc));
+}
+
+async function run(app){
+  await copy();
+  setStatus("Открываю "+app);
+
+  const links=build(app);
+  let i=0;
+
+  function next(){
+    if(i>=links.length){
+      setStatus("Если ошибка — вставь ссылку вручную");
+      return;
     }
+    const l=links[i++];
+    window.location.href=l;
+    setTimeout(next,1000);
+  }
+  next();
+}
 
-    function isMobile() {
-      return /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-    }
+document.getElementById("subInput").value=SUB_URL;
 
-    function base64EncodeUnicode(str) {
-      try {
-        return btoa(unescape(encodeURIComponent(str)));
-      } catch {
-        return btoa(str);
-      }
-    }
+document.getElementById("copyBtn").onclick=copy;
+document.getElementById("openBtn").onclick=openRaw;
 
-    async function copyText(text) {
-      try {
-        await navigator.clipboard.writeText(text);
-        return true;
-      } catch (e) {
-        try {
-          const temp = document.createElement("input");
-          temp.value = text;
-          document.body.appendChild(temp);
-          temp.select();
-          temp.setSelectionRange(0, 99999);
-          const ok = document.execCommand("copy");
-          document.body.removeChild(temp);
-          return ok;
-        } catch {
-          return false;
-        }
-      }
-    }
+document.getElementById("v2Btn").onclick=()=>run("v2raytun");
+document.getElementById("happBtn").onclick=()=>run("happ");
+document.getElementById("clashBtn").onclick=()=>run("clash");
+document.getElementById("shadowBtn").onclick=()=>run("shadowrocket");
+</script>
 
-    function buildDeepLinks(appName, rawUrl) {
-      const encodedUrl = encodeURIComponent(rawUrl);
-      const encodedBase64 = base64EncodeUnicode(rawUrl);
-      const templates = APP_SCHEMES[appName] || [];
-
-      return templates.map(tpl =>
-        tpl
-          .replaceAll("{url}", encodedUrl)
-          .replaceAll("{base64}", encodedBase64)
-      );
-    }
-
-    function launchByIframe(link) {
-      const iframe = document.createElement("iframe");
-      iframe.style.display = "none";
-      iframe.src = link;
-      document.body.appendChild(iframe);
-      setTimeout(() => {
-        try { iframe.remove(); } catch {}
-      }, 1500);
-    }
-
-    function launchByAnchor(link) {
-      const a = document.createElement("a");
-      a.href = link;
-      a.style.display = "none";
-      document.body.appendChild(a);
-      a.click();
-      setTimeout(() => {
-        try { a.remove(); } catch {}
-      }, 500);
-    }
-
-    async function hardLaunch(appName) {
-      const links = buildDeepLinks(appName, SUB_URL);
-
-      if (!links.length) {
-        setStatus("Нет схем для " + appName);
-        return;
-      }
-
-      await copyText(SUB_URL);
-
-      setStatus(
-        "Пробую открыть " + appName + "...\n" +
-        "Ссылка уже скопирована в буфер."
-      );
-
-      let i = 0;
-      let appOpened = false;
-      let finished = false;
-
-      const onVisibility = () => {
-        if (document.hidden) {
-          appOpened = true;
-        }
-      };
-
-      document.addEventListener("visibilitychange", onVisibility);
-
-      function finish(msg) {
-        if (finished) return;
-        finished = true;
-        document.removeEventListener("visibilitychange", onVisibility);
-        setStatus(msg);
-      }
-
-      function tryNext() {
-        if (finished) return;
-
-        if (i >= links.length) {
-          if (appOpened) {
-            finish(
-              appName + ": приложение открылось.\n" +
-              "Если там пишет «Ошибка» — открой внутри него «Добавить подписку» и вставь ссылку из буфера."
-            );
-          } else {
-            finish(
-              appName + ": приложение не открылось.\n" +
-              "Ссылка уже скопирована — вставь её вручную."
-            );
-          }
-          return;
-        }
-
-        const link = links[i++];
-
-        // 1) iframe-метод
-        try {
-          launchByIframe(link);
-        } catch {}
-
-        // 2) anchor click
-        setTimeout(() => {
-          try {
-            launchByAnchor(link);
-          } catch {}
-        }, 120);
-
-        // 3) прямой переход
-        setTimeout(() => {
-          try {
-            window.location.href = link;
-          } catch {}
-        }, 240);
-
-        setTimeout(() => {
-          if (document.visibilityState === "visible" && !appOpened) {
-            tryNext();
-          } else {
-            finish(
-              appName + ": приложение открыто.\n" +
-              "Если импорт не прошёл — ссылка уже в буфере, просто вставь её в самом приложении."
-            );
-          }
-        }, 1200);
-      }
-
-      tryNext();
-    }
-
-    async function openRaw() {
-      setStatus("Открываю RAW-ссылку...");
-      window.open(SUB_URL, "_blank");
-    }
-
-    async function copyLink() {
-      const ok = await copyText(SUB_URL);
-      if (ok) {
-        setStatus("RAW-ссылка скопирована.");
-      } else {
-        prompt("Скопируй вручную:", SUB_URL);
-        setStatus("Автокопирование не сработало.");
-      }
-    }
-
-    function initQR() {
-      if (typeof QRCode === "undefined") return;
-      QRCode.toCanvas(document.getElementById("qrcode"), window.location.href, {
-        width: 220,
-        margin: 2
-      });
-    }
-
-    function initDeviceMode() {
-      const badge = document.getElementById("deviceBadge");
-      const qrWrap = document.getElementById("qrWrap");
-
-      if (isMobile()) {
-        badge.textContent = "Режим: телефон";
-        qrWrap.style.display = "none";
-      } else {
-        badge.textContent = "Режим: ПК";
-        qrWrap.style.display = "block";
-        initQR();
-        setStatus("На ПК deeplink почти бесполезен. Открой эту страницу на телефоне.");
-      }
-    }
-
-    function bindFastTap(id, handler) {
-      const el = document.getElementById(id);
-      let locked = false;
-
-      const run = async (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        if (locked) return;
-        locked = true;
-        try {
-          await handler();
-        } finally {
-          setTimeout(() => { locked = false; }, 900);
-        }
-      };
-
-      el.addEventListener("click", run, { passive: false });
-      el.addEventListener("touchend", run, { passive: false });
-    }
-
-    window.addEventListener("load", () => {
-      subInput.value = SUB_URL;
-      initDeviceMode();
-
-      bindFastTap("copyBtn", copyLink);
-      bindFastTap("openBtn", openRaw);
-      bindFastTap("v2Btn", () => hardLaunch("v2raytun"));
-      bindFastTap("happBtn", () => hardLaunch("happ"));
-      bindFastTap("clashBtn", () => hardLaunch("clash"));
-      bindFastTap("shadowBtn", () => hardLaunch("shadowrocket"));
-    });
-  </script>
 </body>
 </html>
